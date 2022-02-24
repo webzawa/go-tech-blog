@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const articleFormPreview = document.querySelector('.article-form__preview');
   const articleFormBodyTextArea = document.querySelector('.article-form__input--body');
   const articleFormPreviewTextArea = document.querySelector('.article-form__preview-body-contents');
+  const csrfToken = document.getElementsByName('csrf')[0].content;
 
   // 新規作成画面か編集画面かURLで判定
   const mode = { method: '', url: '' };
@@ -61,5 +62,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //URLを指定して画面を遷移させる
     window.location.href = url;
+  });
+
+  // 保存処理イベント設定
+  saveBtn.addEventListener('click', event => {
+    // button 要素クリック時のデフォルトの挙動をキャンセル
+    event.preventDefault();
+    // フォームの内容を取得
+    const fd = new FormData(form);
+    let status;
+    // fetch APIを利用してリクエストを送信
+    fetch(url, {
+      method: method,
+      headers: { 'X-CSRF-Token': csrfToken },
+      body: fd
+    })
+      .then(res => {
+        status = res.status;
+        return res.json();
+      })
+      .then(body => {
+        console.log(JSON.stringify(body));
+        if (status === 200) {
+          // 成功時は一覧に繊維
+          window.location.href = url;
+        }
+        if (body.ValidationErrors) {
+          console.log("Validation Error");
+        }
+      })
+      .catch(err => console.error(err));
   });
 });
