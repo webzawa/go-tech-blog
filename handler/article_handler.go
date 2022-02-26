@@ -19,7 +19,7 @@ type ArticleCreateOutput struct {
 }
 
 func ArticleIndex(c echo.Context) error {
-	articles, err := repository.ArticleList()
+	articles, err := repository.ArticleListByCursor(0)
 
 	if err != nil {
 		log.Println(err.Error())
@@ -27,10 +27,9 @@ func ArticleIndex(c echo.Context) error {
 	}
 
 	data := map[string]interface{}{
-		"Message":  "Article Index",
-		"Now":      time.Now(),
 		"Articles": articles,
 	}
+
 	return render(c, "article/index.html", data)
 }
 
