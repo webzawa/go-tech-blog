@@ -1,12 +1,44 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"gopkg.in/go-playground/validator.v9"
+)
 
 // Article ...
 type Article struct {
 	ID      int       `db:"id" form:"id"`
-	Title   string    `db:"title" form:"title"`
-	Body    string    `db:"body" form:"body"`
+	Title   string    `db:"title" form:"title" validate:"required,max=50"`
+	Body    string    `db:"body" form:"body" validate:"required"`
 	Created time.Time `db:"created"`
 	Updated time.Time `db:"updated"`
+}
+
+func (a *Article) ValidationErrors(err error) []string {
+	// メッセージ格納用スライス
+	var errMessages []string
+	//複数エラーが発生する場合があるのでループ処理
+	for _, err := range err.(validator.ValidationErrors) {
+		//メッセージ格納変数を用意
+		var message string
+		//エラーフィールドを特定
+		switch err.Field() {
+		case "Title":
+			//エラーになったバリデーションルールの特定
+			switch err.Tag() {
+			case "required":
+				message = "タイトルは必須です。"
+			case "max":
+				message = "タイトルは50文字までです。"
+			}
+		case "Body":
+			message = "本文は必須です。"
+		}
+		// messageをスライスに追加
+		if message != "" {
+			errMessages = append(errMessages, message)
+		}
+	}
+	return errMessages
 }

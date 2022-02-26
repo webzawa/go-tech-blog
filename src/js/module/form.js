@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const articleFormBodyTextArea = document.querySelector('.article-form__input--body');
   const articleFormPreviewTextArea = document.querySelector('.article-form__preview-body-contents');
   const csrfToken = document.getElementsByName('csrf')[0].content;
+  const errors = document.querySelector('.article-form__errors');
+  const errorTmpl = document.querySelector('.article-form__error-tmpl').firstElementChild;
 
   // 新規作成画面か編集画面かURLで判定
   const mode = { method: '', url: '' };
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
   saveBtn.addEventListener('click', event => {
     // button 要素クリック時のデフォルトの挙動をキャンセル
     event.preventDefault();
+    //前回のエラーメッセージを削除
+    errors.innerHTML = null;
     // フォームの内容を取得
     const fd = new FormData(form);
     let status;
@@ -88,9 +92,29 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = url;
         }
         if (body.ValidationErrors) {
-          console.log("Validation Error");
+          showErrors(body.ValidationErrors);
         }
       })
       .catch(err => console.error(err));
   });
+  const showErrors = messages => {
+    //引数の値が配列であることを確認します。
+    if (Array.isArray(messages) && messages.length != 0) {
+      //複数メッセージを格納するためのフラグメントを作成
+      const fragment = document.createDocumentFragment();
+      //メッセージのループ処理
+      messages.forEach(messages => {
+        //単一メッセージ格納のためのフラグメントを作成
+        const frag = document.createDocumentFragment();
+        // テンプレートをクローンしてフラグメントに追加する。
+        frag.appendChild(errorTmpl.cloneNode(true));
+        // エラー要素にメッセージをセットする
+        frag.querySelector('.article-form__error').innerHTML = messages;
+        // エラー要素を親フラグメントに追加
+        fragment.appendChild(frag);
+      });
+      // エラーメッセージの表示エリア（要素）にメッセージを追加
+      errors.appendChild(fragment);
+    }
+  };
 });

@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 var db *sqlx.DB
@@ -25,6 +26,8 @@ func main() {
 	e.GET("/:id", handler.ArticleShow)
 	e.GET("/:id/edit", handler.ArticleEdit)
 	e.POST("/", handler.ArticleCreate)
+
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -54,4 +57,12 @@ func connectDB() *sqlx.DB {
 	}
 	log.Println("db connection succeeded")
 	return db
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
 }
