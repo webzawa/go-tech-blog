@@ -68,3 +68,21 @@ func ArticleCreate(article *model.Article) (sql.Result, error) {
 
 	return res, nil
 }
+
+func ArticleDelete(id int) error {
+
+	query := `DELETE FROM articles WHERE id = ?`
+
+	// トランザクションを開始
+	tx := db.MustBegin()
+
+	// クエリ文字列と構造体を引数に渡してSQL実行、クエリ文字列の「:title」などは構造体の値で置換される
+	// 構造体タグで指定してあるフィールドが対象となる。`db: "title"`など
+	_, err := tx.Exec(query, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}

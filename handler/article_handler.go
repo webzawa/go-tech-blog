@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -109,4 +110,17 @@ func ArticleCreate(c echo.Context) error {
 
 	// 処理成功時にステータスコード200でレスポンスを返却する
 	return c.JSON(http.StatusOK, out)
+}
+
+func ArticleDelete(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	if err := repository.ArticleDelete(id); err != nil {
+		// エラーの内容をログ出力
+		c.Logger().Error(err.Error())
+		// 500エラーを返却
+		return c.JSON(http.StatusInternalServerError, "")
+	}
+
+	return c.JSON(http.StatusOK, fmt.Sprintf("Article %d id deleted", id))
 }
