@@ -45,6 +45,23 @@ func ArticleListByCursor(cursor int) ([]*model.Article, error) {
 // 	return articles, nil
 // }
 
+func ArticleGetByID(id int) (*model.Article, error) {
+	query := `SELECT *
+	FROM articles
+	Where ID = ?;`
+
+	// クエリ結果格納
+	var article model.Article
+
+	//クエリ結果格納変数、クエリ文字列、パラメータを指定してクエリを実行する
+	//複数件取得はdb.Selectだが一件取得の場合はdb.Getを使用する
+	if err := db.Get(&article, query, id); err != nil {
+		return nil, err
+	}
+
+	return &article, nil
+}
+
 func ArticleCreate(article *model.Article) (sql.Result, error) {
 	now := time.Now()
 	article.Created = now
