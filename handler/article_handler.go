@@ -20,6 +20,13 @@ type ArticleCreateOutput struct {
 }
 
 func ArticleIndex(c echo.Context) error {
+
+	// "/articles"のパスでリクエスト時に"/"でリダイレクトする
+	// GoogleAnalyticsなどでのアクセス解析時にパスが統一され分析しやすくなる
+	if c.Request().URL.Path == "/articles" {
+		c.Redirect(http.StatusPermanentRedirect, "/")
+	}
+
 	articles, err := repository.ArticleListByCursor(0)
 
 	if err != nil {
@@ -27,11 +34,35 @@ func ArticleIndex(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	//取得できた最後のArticleIDをカーソルとして設定
+	var cursor int
+	if len(articles) != 0 {
+		cursor = articles[len(articles)-1].ID
+	}
+
 	data := map[string]interface{}{
 		"Articles": articles,
+		"Cursor":   cursor,
 	}
 
 	return render(c, "article/index.html", data)
+}
+
+func ArticleList(c echo.Context) error {
+	//クエリパラメータからカーソル値を取得、数値型にキャスト
+	cursor, _ := strconv.Atoi(c.QueryParam("cursor"))
+	//リポジトリ処理を呼び出して記事一覧データを取得、引数にカーソル値を渡して、
+	//IDのどの位置から10件取得するか指定する
+	articles, err := repository.ArticleListByCursor(cursor)
+	//エラー処理
+	if err != nil {
+		c.Logger().Error(err.Error())
+		//クライアントに500エラーでレスポンスを返却
+		//JSON形式でデータのみ返却するので、c.HTMLBlob()でなくc.JSON()を呼び出す
+		return c.JSON(http.StatusInternalServerError, "")
+	}
+
+	return c.JSON(http.StatusOK, articles)
 }
 
 func ArticleNew(c echo.Context) error {
@@ -43,7 +74,7 @@ func ArticleNew(c echo.Context) error {
 }
 
 func ArticleShow(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.Atoi(c.Param("articleID"))
 
 	data := map[string]interface{}{
 		"Message": "Article Show",
@@ -54,7 +85,7 @@ func ArticleShow(c echo.Context) error {
 }
 
 func ArticleEdit(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.Atoi(c.Param("articleID"))
 
 	data := map[string]interface{}{
 		"Message": "Article Edit",
@@ -113,7 +144,7 @@ func ArticleCreate(c echo.Context) error {
 }
 
 func ArticleDelete(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.Atoi(c.Param("articleID"))
 
 	if err := repository.ArticleDelete(id); err != nil {
 		// エラーの内容をログ出力
