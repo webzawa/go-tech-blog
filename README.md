@@ -18,3 +18,9 @@ fresh
 ## マイグレーション
 
 goose up
+
+## 起動
+
+```
+go run main.go
+```
