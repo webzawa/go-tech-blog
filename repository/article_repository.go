@@ -86,6 +86,34 @@ func ArticleCreate(article *model.Article) (sql.Result, error) {
 	return res, nil
 }
 
+func ArticleUpdate(article *model.Article) (sql.Result, error) {
+	now := time.Now()
+
+	article.Updated = now
+
+	query := `UPDATE articles
+	SET title   = :title,
+	    body    = :body,
+	    updated = :updated
+	WHERE id = :id;`
+
+	// トランザクションを開始
+	tx := db.MustBegin()
+
+	// クエリ文字列と構造体を引数に渡してSQL実行、
+	// クエリ文字列の「:title」などは第2引数のarticle構造体の値で置換される
+	// 構造体タグで指定してあるフィールドが対象となる。`db: "title"`など
+	res, err := tx.NamedExec(query, article)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+
+	return res, nil
+}
+
 func ArticleDelete(id int) error {
 
 	query := `DELETE FROM articles WHERE id = ?`

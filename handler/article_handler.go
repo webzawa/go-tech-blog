@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"go-tech-blog/model"
@@ -14,6 +15,12 @@ import (
 )
 
 type ArticleCreateOutput struct {
+	Article          *model.Article
+	Message          string
+	ValidationErrors []string
+}
+
+type ArticleUpdateOutput struct {
 	Article          *model.Article
 	Message          string
 	ValidationErrors []string
@@ -94,11 +101,18 @@ func ArticleShow(c echo.Context) error {
 func ArticleEdit(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("articleID"))
 
-	data := map[string]interface{}{
-		"Message": "Article Edit",
-		"Now":     time.Now(),
-		"ID":      id,
+	article, err := repository.ArticleGetByID(id)
+
+	if err != nil {
+		c.Logger().Error(err.Error())
+		//クライアントに500エラーでレスポンスを返却
+		return c.NoContent(http.StatusInternalServerError)
 	}
+
+	data := map[string]interface{}{
+		"Article": article,
+	}
+
 	return render(c, "article/edit.html", data)
 }
 
@@ -147,6 +161,64 @@ func ArticleCreate(c echo.Context) error {
 	out.Article = &article
 
 	// 処理成功時にステータスコード200でレスポンスを返却する
+	return c.JSON(http.StatusOK, out)
+}
+
+func ArticleUpdate(c echo.Context) error {
+	//リクエスト送信元のパスを取得
+	ref := c.Request().Referer()
+	//リクエスト送信元のパスから記事IDを抽出
+	refID := strings.Split(ref, "/")[4]
+	//リクエストURLのパスパラメータのから記事IDを抽出する
+	reqID := c.Param("articleID")
+
+	if reqID != refID {
+		return c.JSON(http.StatusBadRequest, "")
+	}
+
+	// 送信されてくるフォームの内容を格納する構造体を宣言
+	var article model.Article
+
+	//　レスポンスとして返却する構造体を宣言
+	var out ArticleCreateOutput
+
+	// フォームで送信されたデータを変数に格納する
+	if err := c.Bind(&article); err != nil {
+		// エラーの内容をログ出力
+		c.Logger().Error(err.Error())
+		// リクエストの解釈に失敗した場合は400エラーを返却
+		return c.JSON(http.StatusBadRequest, out)
+	}
+
+	if err := c.Validate(&article); err != nil {
+		// エラーの内容をログ出力
+		c.Logger().Error(err.Error())
+		// // エラーを内容をレスポンスの構造体に格納する
+		// out.Message = err.Error()
+		// エラー内容を検査してカスタムエラーメッセージを取得します
+		out.ValidationErrors = article.ValidationErrors(err)
+		// 解釈したParamが許可していない値の場合は422エラーを返却
+		return c.JSON(http.StatusUnprocessableEntity, out)
+	}
+
+	//文字列型のIDを数値型にキャスト
+	articleID, _ := strconv.Atoi(reqID)
+	//フォームデータを格納した構造体にIDをセット
+	article.ID = articleID
+	//記事を更新する処理を呼び出し
+	_, err := repository.ArticleUpdate(&article)
+
+	if err != nil {
+		//レスポンスの構造体にエラー内容をセット
+		out.Message = err.Error()
+		//リクエストが正しいがサーバ側でエラー発生時には500エラー返却
+		return c.JSON(http.StatusInternalServerError, out)
+	}
+
+	//レスポンスの構造体に記事データをセット
+	out.Article = &article
+
+	//処理成功時はステータスコード200でレスポンスを返却
 	return c.JSON(http.StatusOK, out)
 }
 
