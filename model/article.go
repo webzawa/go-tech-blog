@@ -8,11 +8,13 @@ import (
 
 // Article ...
 type Article struct {
-	ID      int       `db:"id" form:"id" json:"id"`
-	Title   string    `db:"title" form:"title" validate:"required,max=50" json:"title"`
-	Body    string    `db:"body" form:"body" validate:"required" json:"body"`
-	Created time.Time `db:"created" json:"created"`
-	Updated time.Time `db:"updated" json:"updated"`
+	ID        int       `db:"id" form:"id" json:"id"`
+	Title     string    `db:"title" form:"title" validate:"required,max=50" json:"title"`
+	Body      string    `db:"body" form:"body" validate:"required" json:"body"`
+	ImagePath string    `db:"image_path" form:"image_path" json:"image_path"`
+	ThumbPath string    `db:"thumb_path" form:"thumb_path" json:"thumb_path"`
+	Created   time.Time `db:"created" json:"created"`
+	Updated   time.Time `db:"updated" json:"updated"`
 }
 
 func (a *Article) ValidationErrors(err error) []string {

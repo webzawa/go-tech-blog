@@ -2,6 +2,7 @@ package repository
 
 import (
 	"math"
+	"os"
 	"time"
 
 	"go-tech-blog/model"
@@ -50,10 +51,12 @@ func ArticleGetByID(id int) (*model.Article, error) {
 	return &article, nil
 }
 
-func ArticleCreate(article *model.Article) (*model.Article, error) {
+func ArticleCreate(article *model.Article, dst *os.File) (*model.Article, error) {
 	now := time.Now()
 	article.Created = now
 	article.Updated = now
+	article.ImagePath = dst.Name()
+	article.ThumbPath = ""
 
 	// トランザクションを開始
 	tx := db.Begin()

@@ -2,8 +2,10 @@ package handler
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -117,6 +119,28 @@ func ArticleEdit(c echo.Context) error {
 }
 
 func ArticleCreate(c echo.Context) error {
+	file, err := c.FormFile("image")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	dst, err := os.Create("uploads" + "/" + file.Filename)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
 	// 送信されてくるフォームの内容を格納する構造体を宣言
 	var article model.Article
 
@@ -143,7 +167,7 @@ func ArticleCreate(c echo.Context) error {
 	}
 
 	// repositoryを呼び出して保存処理を実行する
-	res, err := repository.ArticleCreate(&article)
+	res, err := repository.ArticleCreate(&article, dst)
 	if err != nil {
 		// エラーの内容をログ出力
 		c.Logger().Error(err.Error())
