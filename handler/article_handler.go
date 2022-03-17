@@ -152,7 +152,7 @@ func ArticleCreate(c echo.Context) error {
 	}
 
 	// SQL実行結果から作成されたレコードのIDを取得
-	id, _ := res.LastInsertId()
+	id := res.ID
 
 	//構造体にIDをセット
 	article.ID = int(id)

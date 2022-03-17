@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"math"
 	"time"
 
@@ -15,18 +14,12 @@ func ArticleListByCursor(cursor int) ([]*model.Article, error) {
 		cursor = math.MaxInt32
 	}
 
-	// IDの降順に記事データを10件取得
-	query := `SELECT *
-	FROM articles
-	Where ID < ?
-	ORDER BY id desc
-	LIMIT 10;`
-
 	// クエリ結果格納スライス作成、、10件取得と決め、サイズとキャパシティを指定
 	articles := make([]*model.Article, 0, 10)
 
 	//クエリ結果格納変数、クエリ文字列、パラメータを指定してクエリを実行する
-	if err := db.Select(&articles, query, cursor); err != nil {
+	err := db.Where("id < ?", cursor).Order("id desc").Find(&articles).Limit(10).Error
+	if err != nil {
 		return nil, err
 	}
 
@@ -46,36 +39,28 @@ func ArticleListByCursor(cursor int) ([]*model.Article, error) {
 // }
 
 func ArticleGetByID(id int) (*model.Article, error) {
-	query := `SELECT *
-	FROM articles
-	Where ID = ?;`
-
-	// クエリ結果格納
 	var article model.Article
 
 	//クエリ結果格納変数、クエリ文字列、パラメータを指定してクエリを実行する
 	//複数件取得はdb.Selectだが一件取得の場合はdb.Getを使用する
-	if err := db.Get(&article, query, id); err != nil {
+	if err := db.Find(&article, id).Error; err != nil {
 		return nil, err
 	}
 
 	return &article, nil
 }
 
-func ArticleCreate(article *model.Article) (sql.Result, error) {
+func ArticleCreate(article *model.Article) (*model.Article, error) {
 	now := time.Now()
 	article.Created = now
 	article.Updated = now
 
-	query := `INSERT INTO articles (title, body, created, updated)
-	VALUES (:title, :body, :created, :updated);`
-
 	// トランザクションを開始
-	tx := db.MustBegin()
+	tx := db.Begin()
 
 	// クエリ文字列と構造体を引数に渡してSQL実行、クエリ文字列の「:title」などは構造体の値で置換される
 	// 構造体タグで指定してあるフィールドが対象となる。`db: "title"`など
-	res, err := tx.NamedExec(query, article)
+	err := tx.Create(&article).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -83,27 +68,20 @@ func ArticleCreate(article *model.Article) (sql.Result, error) {
 
 	tx.Commit()
 
-	return res, nil
+	return article, nil
 }
 
-func ArticleUpdate(article *model.Article) (sql.Result, error) {
+func ArticleUpdate(article_org *model.Article) (*model.Article, error) {
+	var article model.Article
+	db.Find(&article, article_org.ID)
+
 	now := time.Now()
-
-	article.Updated = now
-
-	query := `UPDATE articles
-	SET title   = :title,
-	    body    = :body,
-	    updated = :updated
-	WHERE id = :id;`
+	article_org.Updated = now
 
 	// トランザクションを開始
-	tx := db.MustBegin()
+	tx := db.Begin()
 
-	// クエリ文字列と構造体を引数に渡してSQL実行、
-	// クエリ文字列の「:title」などは第2引数のarticle構造体の値で置換される
-	// 構造体タグで指定してあるフィールドが対象となる。`db: "title"`など
-	res, err := tx.NamedExec(query, article)
+	err := tx.Model(article).Updates(model.Article{Title: article_org.Title, Body: article_org.Body, Created: article_org.Created, Updated: now}).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -111,23 +89,22 @@ func ArticleUpdate(article *model.Article) (sql.Result, error) {
 
 	tx.Commit()
 
-	return res, nil
+	return &article, nil
 }
 
 func ArticleDelete(id int) error {
 
-	query := `DELETE FROM articles WHERE id = ?`
+	var article model.Article
 
 	// トランザクションを開始
-	tx := db.MustBegin()
-
-	// クエリ文字列と構造体を引数に渡してSQL実行、クエリ文字列の「:title」などは構造体の値で置換される
-	// 構造体タグで指定してあるフィールドが対象となる。`db: "title"`など
-	_, err := tx.Exec(query, id)
+	tx := db.Begin()
+	tx.Find(&article, id)
+	err := tx.Delete(&article).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
+	tx.Commit()
 
-	return tx.Commit()
+	return nil
 }

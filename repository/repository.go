@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
-var db *sqlx.DB
+var db *gorm.DB
 
-func SetDB(d *sqlx.DB) {
+func SetDB(d *gorm.DB) {
 	db = d
 }

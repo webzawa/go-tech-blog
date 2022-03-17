@@ -9,7 +9,8 @@ GO & MySQL の CRUD 記事アプリ
 Golang
 echo
 pongo2
-sqlx
+~~sqlx~~
+gorm
 goose
 MySQL
 direnv

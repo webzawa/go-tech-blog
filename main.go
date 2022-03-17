@@ -2,19 +2,18 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"go-tech-blog/handler"
 	"go-tech-blog/repository"
 
-	_ "github.com/go-sql-driver/mysql" // Using MySQL driver
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gopkg.in/go-playground/validator.v9"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var db *sqlx.DB
+var db *gorm.DB
 var e = createMux()
 
 func main() {
@@ -57,15 +56,16 @@ func createMux() *echo.Echo {
 	return e
 }
 
-func connectDB() *sqlx.DB {
-	dsn := os.Getenv("DSN")
-	db, err := sqlx.Open("mysql", dsn)
+func connectDB() *gorm.DB {
+	// dsn := os.Getenv("DSN")
+	dsn := "workuser:Passw0rd!@tcp(127.0.0.1:3306)/techblog?parseTime=true&autocommit=0&sql_mode=%27TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY%27"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	if err := db.Ping(); err != nil {
-		e.Logger.Fatal(err)
-	}
+	// if err := db.Ping(); err != nil {
+	// 	e.Logger.Fatal(err)
+	// }
 	log.Println("db connection succeeded")
 	return db
 }
