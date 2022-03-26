@@ -14,7 +14,7 @@ func htmlBlob(file string, data map[string]interface{}) ([]byte, error) {
 }
 
 func render(c echo.Context, file string, data map[string]interface{}) error {
-	data["CSRF"] = c.Get("csrf").(string)
+	// data["CSRF"] = c.Get("csrf").(string)
 
 	b, err := htmlBlob(file, data)
 

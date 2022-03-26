@@ -6,11 +6,18 @@ import (
 	"go-tech-blog/handler"
 	"go-tech-blog/repository"
 
+	"context"
+	"fmt"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gopkg.in/go-playground/validator.v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	firebase "firebase.google.com/go"
+
+	"google.golang.org/api/option"
 )
 
 var db *gorm.DB
@@ -37,7 +44,30 @@ func main() {
 	e.DELETE("/api/articles/:articleID", handler.ArticleDelete) // 削除
 	e.PATCH("/api/articles/:articleID", handler.ArticleUpdate)  // 更新
 
-	e.Validator = &CustomValidator{validator: validator.New()}
+	e.POST("/api/users", handler.UserCreate) // 作成
+
+	// e.Validator = &CustomValidator{validator: validator.New()}
+
+	ctx := context.Background()
+	opt := option.WithCredentialsFile("./seisou-75737-firebase-adminsdk-ptcqo-12d01b7869.json")
+	app, err := firebase.NewApp(context.Background(), nil, opt)
+	if err != nil {
+		// return nil, fmt.Errorf("error initializing app: %v", err)
+		log.Printf("not Successfully fetched user data")
+	}
+	client, err := app.Auth(ctx)
+	if err != nil {
+		log.Fatalf("error getting Auth client: %v\n", err)
+	}
+	uid := "jpAemF4fXWSNqD4HsPtUvkJP8o92"
+	u, err := client.GetUser(ctx, uid)
+	if err != nil {
+		log.Fatalf("error getting user %s: %v\n", uid, err)
+	}
+	fmt.Println("============================")
+	log.Printf("user data: %#v\n", u)
+	log.Printf("Successfully fetched user data: %#v\n", u.UserInfo)
+	fmt.Println("============================")
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -48,7 +78,14 @@ func createMux() *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Gzip())
-	e.Use(middleware.CSRF())
+	// e.Use(middleware.CSRF())
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"*"},
+		AllowHeaders:     []string{"authorization", "Content-Type"},
+		AllowCredentials: true,
+		AllowMethods:     []string{echo.OPTIONS, echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
+	}))
 
 	e.Static("/css", "src/css")
 	e.Static("/js", "src/js")

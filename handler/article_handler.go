@@ -2,10 +2,8 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -119,27 +117,27 @@ func ArticleEdit(c echo.Context) error {
 }
 
 func ArticleCreate(c echo.Context) error {
-	file, err := c.FormFile("image")
-	if err != nil {
-		return err
-	}
-	src, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer src.Close()
+	// file, err := c.FormFile("image")
+	// if err != nil {
+	// 	return err
+	// }
+	// src, err := file.Open()
+	// if err != nil {
+	// 	return err
+	// }
+	// defer src.Close()
 
-	// Destination
-	dst, err := os.Create("uploads" + "/" + file.Filename)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
+	// // Destination
+	// dst, err := os.Create("uploads" + "/" + file.Filename)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer dst.Close()
 
-	// Copy
-	if _, err = io.Copy(dst, src); err != nil {
-		return err
-	}
+	// // Copy
+	// if _, err = io.Copy(dst, src); err != nil {
+	// 	return err
+	// }
 
 	// 送信されてくるフォームの内容を格納する構造体を宣言
 	var article model.Article
@@ -155,19 +153,20 @@ func ArticleCreate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, out)
 	}
 
-	if err := c.Validate(&article); err != nil {
-		// エラーの内容をログ出力
-		c.Logger().Error(err.Error())
-		// // エラーを内容をレスポンスの構造体に格納する
-		// out.Message = err.Error()
-		// エラー内容を検査してカスタムエラーメッセージを取得します
-		out.ValidationErrors = article.ValidationErrors(err)
-		// 解釈したParamが許可していない値の場合は422エラーを返却
-		return c.JSON(http.StatusUnprocessableEntity, out)
-	}
+	// if err := c.Validate(&article); err != nil {
+	// 	// エラーの内容をログ出力
+	// 	c.Logger().Error(err.Error())
+	// 	// // エラーを内容をレスポンスの構造体に格納する
+	// 	// out.Message = err.Error()
+	// 	// エラー内容を検査してカスタムエラーメッセージを取得します
+	// 	out.ValidationErrors = article.ValidationErrors(err)
+	// 	// 解釈したParamが許可していない値の場合は422エラーを返却
+	// 	return c.JSON(http.StatusUnprocessableEntity, out)
+	// }
 
 	// repositoryを呼び出して保存処理を実行する
-	res, err := repository.ArticleCreate(&article, dst)
+	// res, err := repository.ArticleCreate(&article, dst)
+	res, err := repository.ArticleCreate(&article)
 	if err != nil {
 		// エラーの内容をログ出力
 		c.Logger().Error(err.Error())
