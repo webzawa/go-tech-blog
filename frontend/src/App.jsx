@@ -50,6 +50,29 @@ class App extends Component {
 
 
     });
+
+    console.log("===== start firebase.auth().currentUser.getIdToken()");
+    console.log(firebase.auth().currentUser.getIdToken(true));
+    // if (firebase.auth().currentUser) {
+    //   console.log("start if context");
+    //   axios.post(`http://0.0.0.0:8080/api/users`, {
+    //     token: firebase.auth().currentUser.getIdToken(true)
+    //   }, {
+    //     headers: {
+    //       // "Access-Control-Allow-Origin": true,
+    //       // 'Content-Type': 'application/x-www-form-urlencoded'
+    //       "Content-Type": "application/json"
+    //     }
+    //   })
+    //   .then(res => {
+    //     console.log("===== g start =====");
+    //     console.log(res);
+    //     console.log(res.data);
+    //     console.log("===== g end =====");
+    //   })
+    // }
+    // console.log("===== end firebase.auth().currentUser.getIdToken()");
+
   }
 
   logout() {

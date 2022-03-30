@@ -69,6 +69,14 @@ func main() {
 	log.Printf("Successfully fetched user data: %#v\n", u.UserInfo)
 	fmt.Println("============================")
 
+	idToken := "eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ2NDExN2FjMzk2YmM3MWM4YzU5ZmI1MTlmMDEzZTJiNWJiNmM2ZTEiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoic2VyaXphd2EiLCJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vc2Vpc291LTc1NzM3IiwiYXVkIjoic2Vpc291LTc1NzM3IiwiYXV0aF90aW1lIjoxNjQ4NjMxODA2LCJ1c2VyX2lkIjoianBBZW1GNGZYV1NOcUQ0SHNQdFV2a0pQOG85MiIsInN1YiI6ImpwQWVtRjRmWFdTTnFENEhzUHRVdmtKUDhvOTIiLCJpYXQiOjE2NDg2MzI1MjQsImV4cCI6MTY0ODYzNjEyNCwiZW1haWwiOiJtLnNlcml6YXdhMjA2NEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsibS5zZXJpemF3YTIwNjRAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.Zl3vtbQbefHcdJB-uzAbnMzKkUGrrtQy_WCObiAmhJWFSBMQbncBQUiod6AVEKP45W-EhjBJbHuogRx-VXjF3cKSg25ziqyBHuawEc4r5F0F8NOsXuF7aULUFqNr__9PwyjjjVUngXs2Z9rz2XlfqKl0AEIMEAVHMiBSnaZGkBeJII3oaLQnCc7jkdfEl6okfG7N11gaTNh9xhiV1p13lFaxgo6x61tPalp4DCVg6QBLpv5ElfPGGz6cDvjBN1VYPeMVkKsWNfhN78TnE8Jf7hKYOfDm1405HHowOdL3XaO9CSNPKW9NS7TpdO8WSY7roOa6-O__Ej6O7f8KWlKC-A"
+	token, err := client.VerifyIDToken(ctx, idToken)
+	if err != nil {
+		log.Fatalf("error verifying ID token: %v\n", err)
+	}
+
+	log.Printf("Verified ID token: %v\n", token)
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
